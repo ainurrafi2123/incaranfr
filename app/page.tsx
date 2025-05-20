@@ -1,12 +1,12 @@
 import Navbar from "./components/Navbar";
-import Soon from "./components/ui/Soon";
+import Card from "./components/Card";
 
 const Page = () => {
   return (
     <div>
       <Navbar />
       <div className="pt-16">
-        <Soon />
+        <Card />
       </div>
     </div>
   );
