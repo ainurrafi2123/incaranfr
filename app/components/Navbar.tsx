@@ -14,7 +14,6 @@ interface NavbarButtonProps {
 }
 
 const NavbarButton: React.FC<NavbarButtonProps> = ({ user, pathname }) => {
-  // Tentukan teks dan tujuan berdasarkan pathname
   const ismypagePage = pathname === "/mypage";
   const buttonText = ismypagePage ? "List an Items" : "Sell";
   const destination = user
@@ -23,7 +22,6 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({ user, pathname }) => {
       : "/mypage/listing/create"
     : "/login";
 
-  // Tentukan apakah navbar putih untuk styling
   const isWhiteNavbar = pathname === "/mypage" || pathname.startsWith("/search");
 
   return (
@@ -40,24 +38,22 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({ user, pathname }) => {
 };
 
 export default function Navbar() {
-  // State untuk data user dan status login
   const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
-  // State untuk kontrol visibilitas dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // Dapatkan pathname untuk deteksi halaman
   const pathname = usePathname();
 
-  // Basis URL untuk storage
+  // State untuk cek apakah sudah di client (hindari SSR mismatch)
+  const [isClient, setIsClient] = useState(false);
+
   const BASE_URL = "http://localhost:8000";
 
-  // Fungsi untuk memeriksa status login dari localStorage
+  // Cek login hanya di client side
   const checkLoginStatus = () => {
     try {
       const token = localStorage.getItem("token");
       if (token) {
         const name = localStorage.getItem("name") || "User";
         let avatar = localStorage.getItem("avatar") || "/default-avatar.png";
-        // Pastikan avatar valid
         if (avatar && !avatar.startsWith("http") && !avatar.startsWith("/")) {
           avatar = `${BASE_URL}/storage/${avatar}`;
         }
@@ -65,7 +61,7 @@ export default function Navbar() {
         console.log("User loaded from localStorage:", { name, avatar });
       } else {
         setUser(null);
-        setIsDropdownOpen(false); // Tutup dropdown saat logout
+        setIsDropdownOpen(false);
         console.log("No user found in localStorage");
       }
     } catch (error) {
@@ -75,34 +71,34 @@ export default function Navbar() {
     }
   };
 
-  // Jalankan saat komponen dimuat dan dengarkan event storage
   useEffect(() => {
-    checkLoginStatus(); // Periksa saat pertama kali dimuat
+    setIsClient(true);  // Tandai sudah client
+    checkLoginStatus();
+
     window.addEventListener("storage", checkLoginStatus);
-    // Tutup dropdown saat klik di luar
+
     const handleClickOutside = (e: MouseEvent) => {
       if (!(e.target as Element).closest(".mypage-dropdown")) {
         setIsDropdownOpen(false);
       }
     };
     document.addEventListener("click", handleClickOutside);
+
     return () => {
       window.removeEventListener("storage", checkLoginStatus);
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
-  // Fungsi untuk toggle dropdown
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Fungsi untuk handle logout
   const handleLogout = () => {
     try {
       logoutUser();
       setUser(null);
-      setIsDropdownOpen(false); // Tutup dropdown setelah logout
+      setIsDropdownOpen(false);
       toast.success("Berhasil logout!", {
         position: "top-right",
         autoClose: 3000,
@@ -125,13 +121,15 @@ export default function Navbar() {
     }
   };
 
-  // Validasi avatar untuk Image
   const getValidAvatar = (avatar: string) => {
     if (avatar && (avatar.startsWith("http") || avatar.startsWith("/"))) {
       return avatar;
     }
     return "/default-avatar.png";
   };
+
+  // Jika belum client, jangan render apa-apa (hindari SSR mismatch)
+  if (!isClient) return null;
 
   return (
     <nav
@@ -143,9 +141,7 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-center justify-between">
-          {/* Left section - Logo, Hamburger & Search */}
           <div className="flex items-center flex-grow lg:flex-grow-0">
-            {/* Hamburger - Mobile Only */}
             <button
               className={`${
                 pathname === "/mypage" || pathname.startsWith("/search")
@@ -155,8 +151,6 @@ export default function Navbar() {
             >
               <Menu className="w-6 h-6" />
             </button>
-
-            {/* Logo with Link to Homepage */}
             <div className="flex-shrink-0">
               <Link href="/">
                 <Image
@@ -174,7 +168,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Search Bar - Hidden on smallest screens, visible and expanding from md up */}
           <div className="hidden md:flex mx-4 lg:mx-6 flex-grow max-w-xl">
             <div className="flex items-center bg-gray-100 rounded-full h-10 px-4 w-full">
               <input
@@ -186,9 +179,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right section - Actions */}
           <div className="flex items-center font-satoshi">
-            {/* Desktop: Get Info, Sign in / Log in */}
             <div className="hidden lg:flex items-center space-x-5 mr-4">
               <a
                 href="#"
@@ -226,7 +217,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Garis Batas */}
             <div className="hidden md:flex items-center">
               <span
                 className={`border-r-2 h-6 mx-2 ${
@@ -237,9 +227,7 @@ export default function Navbar() {
               ></span>
             </div>
 
-            {/* Icons */}
             <div className="flex items-center space-x-1 sm:space-x-3">
-              {/* Mobile user icon untuk belum login */}
               {!user && (
                 <button
                   className={`${
@@ -252,7 +240,6 @@ export default function Navbar() {
                 </button>
               )}
 
-              {/* Bell dan Cart */}
               <button className="relative flex items-center justify-center h-10 w-10">
                 <Bell
                   className={`w-5 h-5 ${
@@ -272,7 +259,6 @@ export default function Navbar() {
                 />
               </button>
 
-              {/* mypage picture (circle) ketika login */}
               {user && (
                 <div className="relative flex items-center justify-center h-10 w-10 mypage-dropdown">
                   <button onClick={toggleDropdown}>
@@ -290,18 +276,23 @@ export default function Navbar() {
                       />
                     </div>
                   </button>
-                  {/* Dropdown */}
                   {isDropdownOpen && (
-                    <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md py-2 w-32 z-50">
+                    <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md py-2 w-48 z-50">
                       <Link
                         href="/mypage"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 hover:bg-gray-200 text-sm text-gray-700"
+                      >
+                        My Page
+                      </Link>
+                      <Link
+                        href="/mypage/profile"
+                        className="block px-4 py-2 hover:bg-gray-200 text-sm text-gray-700"
                       >
                         Profile
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-200 text-sm text-gray-700"
                       >
                         Logout
                       </button>
@@ -311,25 +302,10 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Tombol Sell/Listing Items menggunakan NavbarButton */}
             <NavbarButton user={!!user} pathname={pathname} />
           </div>
         </div>
-
-        {/* Mobile Search - Full width below the main navbar */}
-        <div className="mt-3 md:hidden">
-          <div className="flex items-center bg-gray-100 rounded-full h-10 px-4">
-            <input
-              type="text"
-              placeholder="Cari apa saja"
-              className="flex-grow bg-transparent focus:outline-none text-sm font-medium text-gray-900"
-            />
-            <Search className="w-5 h-5 text-gray-500 ml-2" />
-          </div>
-        </div>
       </div>
-
-      {/* Toast Container untuk notifikasi */}
       <ToastContainer />
     </nav>
   );
