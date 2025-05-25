@@ -4,32 +4,66 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Search, ChevronDown, Trash2, Clock } from 'lucide-react';
 
+interface ProductImage {
+  id: number;
+  image_url: string;
+  is_cover: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  images?: ProductImage[];
+  [key: string]: any; // for any additional fields
+}
+
 export default function ProductListingsPage() {
   const [selectedTab, setSelectedTab] = useState('active');
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState('newest');
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
+// Ambil userId dari localStorage saat komponen pertama kali dimuat
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const storedUserId = localStorage.getItem('user_id');
+    console.log("✅ user_id dari localStorage:", storedUserId); // 👈 Debug userId
+    setUserId(storedUserId);
+  }
+}, []);
 
+// Fetch data produk setelah userId tersedia
+useEffect(() => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://localhost:8000/products/user/${userId}`);
+      const url = `http://localhost:8000/api/products/user/${userId}`;
+      console.log("🌐 Memanggil URL:", url); // 👈 Debug URL API
+
+      const response = await axios.get(url);
+      console.log("📦 Respon API:", response.data); // 👈 Debug isi response
+
       setProducts(response.data.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('❌ Error fetching products:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (userId) {
-      fetchProducts();
-    }
-  }, [userId]);
+  if (userId) {
+    fetchProducts();
+  } else {
+    console.warn("⚠️ userId belum tersedia, tidak memanggil API.");
+  }
+}, [userId]);
+
 
   const handleSelectAll = () => {
     if (selectedItems.length === filteredProducts.length) {
@@ -39,7 +73,7 @@ export default function ProductListingsPage() {
     }
   };
 
-  const handleSelectItem = (id) => {
+  const handleSelectItem = (id: number) => {
     if (selectedItems.includes(id)) {
       setSelectedItems(selectedItems.filter((item) => item !== id));
     } else {
@@ -47,7 +81,7 @@ export default function ProductListingsPage() {
     }
   };
 
-  const handleDeactivate = async (productId) => {
+  const handleDeactivate = async (productId: number) => {
     try {
       await axios.put(`https://your-api-url/products/${productId}/update`, {
         status: 'inactive',
@@ -61,7 +95,7 @@ export default function ProductListingsPage() {
     }
   };
 
-  const handleDelete = async (productId) => {
+  const handleDelete = async (productId: number) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
       try {
         await axios.delete(`https://your-api-url/products/${productId}/delete`);
@@ -73,20 +107,20 @@ export default function ProductListingsPage() {
     }
   };
 
-  const handleOffer = (productId) => {
+  const handleOffer = (productId: number) => {
     console.log(`Offer untuk produk ID: ${productId}`);
   };
 
-  const handlePromote = (productId) => {
+  const handlePromote = (productId: number) => {
     console.log(`Promote untuk produk ID: ${productId}`);
   };
 
-  const sortProducts = (productsToSort) => {
+  const sortProducts = (productsToSort: Product[]) => {
     return [...productsToSort].sort((a, b) => {
       if (sortBy === 'newest') {
-        return new Date(b.created_at) - new Date(a.created_at);
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       } else if (sortBy === 'oldest') {
-        return new Date(a.created_at) - new Date(b.created_at);
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       } else if (sortBy === 'price-high') {
         return b.price - a.price;
       } else if (sortBy === 'price-low') {
