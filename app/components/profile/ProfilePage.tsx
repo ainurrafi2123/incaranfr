@@ -31,16 +31,11 @@ export default function ProfilePage() {
   const {
     listings,
     categories,
-    brands,
-    activeTab,
     sort,
     category,
-    brand,
     search,
-    setActiveTab,
     setSort,
     setCategory,
-    setBrand,
     setSearch,
   } = useListings();
 
@@ -370,20 +365,15 @@ export default function ProfilePage() {
 
       {/* Listings */}
       <Listings
-        listings={listings}
-        categories={categories}
-        brands={brands}
-        activeTab={activeTab}
-        sort={sort}
-        category={category}
-        brand={brand}
-        search={search}
-        setActiveTab={setActiveTab}
-        setSort={setSort}
-        setCategory={setCategory}
-        setBrand={setBrand}
-        setSearch={setSearch}
-      />
+      listings={listings}
+      sort={sort}
+      category={category}
+      search={search}
+      setSort={setSort}
+      setCategory={setCategory}
+      setSearch={setSearch}
+    />
+
 
       {/* Toast Container untuk notifikasi */}
       <ToastContainer />
