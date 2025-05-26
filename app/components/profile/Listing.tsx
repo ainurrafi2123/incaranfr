@@ -1,5 +1,7 @@
 "use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 
 interface ProductImage {
@@ -10,30 +12,30 @@ interface ProductImage {
   created_at: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+}
+
 interface Listing {
   id: number;
   name: string;
   price: number;
+  status: 'draft' | 'published';
   images: ProductImage[];
+  category: Category;
 }
 
 interface ListingsProps {
   listings: Listing[];
-  categories: string[];
-  brands: string[];
-  activeTab: "for_sale" | "sold";
   sort: string;
   category: string;
-  brand: string;
   search: string;
-  setActiveTab: (tab: "for_sale" | "sold") => void;
   setSort: (sort: string) => void;
   setCategory: (category: string) => void;
-  setBrand: (brand: string) => void;
   setSearch: (search: string) => void;
 }
 
-// Ganti dengan BASE_URL sesuai config kamu
 const BASE_URL = "http://localhost:8000";
 
 const getCoverImage = (images: ProductImage[]) => {
@@ -42,54 +44,42 @@ const getCoverImage = (images: ProductImage[]) => {
   const cover = images.find((img) => img.is_cover === 1);
   if (cover) return `${BASE_URL}/storage/${cover.image_url}`;
 
-  // fallback gambar pertama kalau tidak ada cover
   return `${BASE_URL}/storage/${images[0].image_url}`;
 };
 
 export const Listings: React.FC<ListingsProps> = ({
   listings,
-  categories,
-  brands,
-  activeTab,
   sort,
   category,
-  brand,
-  search,
-  setActiveTab,
   setSort,
   setCategory,
-  setBrand,
+  search,
   setSearch,
 }) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/category-products/`);
+        const data = await res.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Gagal memuat kategori:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const publishedListings = listings.filter((item) => item.status === 'published');
+
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold mb-4">{listings.length} Items</h3>
+      <h3 className="text-lg font-semibold mb-4">{publishedListings.length} Items</h3>
 
-      {/* Tabs dan Filter */}
+      {/* Filter */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setActiveTab("for_sale")}
-            className={`px-4 py-2 rounded-md ${
-              activeTab === "for_sale"
-                ? "bg-primary text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            For Sale
-          </button>
-          <button
-            onClick={() => setActiveTab("sold")}
-            className={`px-4 py-2 rounded-md ${
-              activeTab === "sold"
-                ? "bg-primary text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            Sold
-          </button>
-        </div>
-
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={sort}
@@ -107,23 +97,10 @@ export const Listings: React.FC<ListingsProps> = ({
             onChange={(e) => setCategory(e.target.value)}
             className="border rounded-md px-3 py-2 text-sm"
           >
-            <option value="">Category</option>
+            <option value="">Semua Kategori</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
-          >
-            <option value="">Brand</option>
-            {brands.map((br) => (
-              <option key={br} value={br}>
-                {br}
+              <option key={cat.id} value={cat.id.toString()}>
+                {cat.name}
               </option>
             ))}
           </select>
@@ -143,8 +120,8 @@ export const Listings: React.FC<ListingsProps> = ({
 
       {/* Item Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        {listings.length === 0 && <p>Tidak ada produk</p>}
-        {listings.map((item) => (
+        {publishedListings.length === 0 && <p>Tidak ada produk</p>}
+        {publishedListings.map((item) => (
           <div key={item.id} className="border rounded-md p-2">
             <div className="relative w-full pt-[100%] rounded-md overflow-hidden mb-2">
               <Image
@@ -162,6 +139,7 @@ export const Listings: React.FC<ListingsProps> = ({
             <p className="text-sm text-primary font-semibold">
               Rp {item.price.toLocaleString("id-ID")}
             </p>
+            <p className="text-xs text-gray-500">{item.category?.name}</p>
           </div>
         ))}
       </div>
