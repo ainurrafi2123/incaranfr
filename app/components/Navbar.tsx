@@ -249,15 +249,17 @@ export default function Navbar() {
                   }`}
                 />
               </button>
-              <button className="relative flex items-center justify-center h-10 w-10">
-                <ShoppingCart
-                  className={`w-5 h-5 ${
-                    pathname === "/mypage" || pathname.startsWith("/search")
-                      ? "text-gray-900"
-                      : "text-white"
-                  }`}
-                />
-              </button>
+              <Link to="/cart">
+      <button className="relative flex items-center justify-center h-10 w-10">
+        <ShoppingCart
+          className={`w-5 h-5 ${
+            location.pathname === "/mypage" || location.pathname.startsWith("/search")
+              ? "text-gray-900"
+              : "text-white"
+          }`}
+        />
+      </button>
+    </Link>
 
               {user && (
                 <div className="relative flex items-center justify-center h-10 w-10 mypage-dropdown">
