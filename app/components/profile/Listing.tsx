@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 interface ProductImage {
@@ -21,7 +22,7 @@ interface Listing {
   id: number;
   name: string;
   price: number;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   images: ProductImage[];
   category: Category;
 }
@@ -40,23 +41,23 @@ const BASE_URL = "http://localhost:8000";
 
 const getCoverImage = (images: ProductImage[]) => {
   if (!images || images.length === 0) return "/default-item.png";
-
   const cover = images.find((img) => img.is_cover === 1);
-  if (cover) return `${BASE_URL}/storage/${cover.image_url}`;
-
-  return `${BASE_URL}/storage/${images[0].image_url}`;
+  return cover
+    ? `${BASE_URL}/storage/${cover.image_url}`
+    : `${BASE_URL}/storage/${images[0].image_url}`;
 };
 
 export const Listings: React.FC<ListingsProps> = ({
   listings,
   sort,
   category,
+  search,
   setSort,
   setCategory,
-  search,
   setSearch,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -72,11 +73,27 @@ export const Listings: React.FC<ListingsProps> = ({
     fetchCategories();
   }, []);
 
-  const publishedListings = listings.filter((item) => item.status === 'published');
+  const filteredListings = listings
+    .filter((item) => item.status === "published")
+    .filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase()) ||
+      item.category?.name.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((item) =>
+      category ? item.category?.id.toString() === category : true
+    )
+    .sort((a, b) => {
+      if (sort === "price_low") return a.price - b.price;
+      if (sort === "price_high") return b.price - a.price;
+      if (sort === "oldest") return a.id - b.id; // asumsi id urut sesuai waktu
+      return b.id - a.id; // newest default
+    });
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold mb-4">{publishedListings.length} Items</h3>
+      <h3 className="text-lg font-semibold mb-4">
+        {filteredListings.length} Items
+      </h3>
 
       {/* Filter */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -120,9 +137,13 @@ export const Listings: React.FC<ListingsProps> = ({
 
       {/* Item Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        {publishedListings.length === 0 && <p>Tidak ada produk</p>}
-        {publishedListings.map((item) => (
-          <div key={item.id} className="border rounded-md p-2">
+        {filteredListings.length === 0 && <p>Tidak ada produk</p>}
+        {filteredListings.map((item) => (
+          <div
+            key={item.id}
+            className="group cursor-pointer border rounded-md p-2 hover:shadow-md transition"
+            onClick={() => router.push(`/products/${item.id}`)}
+          >
             <div className="relative w-full pt-[100%] rounded-md overflow-hidden mb-2">
               <Image
                 src={getCoverImage(item.images) || "/default-item.png"}

@@ -11,13 +11,12 @@ const Page = () => {
   return (
     <div>
       <Navbar />
-      <div className="pt-16">
-        <Kategori />
-        <Banner />
-        <CategoryBox />
-        <CategoryBannerGrid />
-        <TopBrandsCarousel />
-        <Card />
+      <div className="pt-16"> 
+          <Banner />
+          <CategoryBox />
+          {/* <CategoryBannerGrid />
+        <TopBrandsCarousel /> */}
+          <Card />
         <Footer />
       </div>
     </div>

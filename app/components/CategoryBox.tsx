@@ -1,41 +1,37 @@
 import React from 'react';
+import Image from 'next/image';
 
 const CategoryBox = () => {
   const categories = [
     {
       title: 'Gaming',
       description: 'Games, consoles, accessories',
-      image: '/images/gaming.png',
+      image: '/gaming.jpg',
     },
     {
       title: 'Figurines',
       description: 'Action figures, minis, accessories',
-      image: '/images/figurines.png',
+      image: '/figurines.jpg',
     },
     {
       title: 'Trading Cards',
       description: 'Booster packs, single cards, boxes',
-      image: '/images/cards.png',
+      image: '/trading.jpg',
     },
     {
       title: 'Electronics',
       description: 'Cell phones, tablets, laptops',
-      image: '/images/electronics.png',
+      image: '/electronic.jpg',
     },
     {
       title: 'Toys',
       description: 'Plushies, building blocks, dolls',
-      image: '/images/toys.png',
+      image: '/toys.jpg',
     },
     {
       title: 'Beauty',
       description: 'Fragrance, makeup, accessories',
-      image: '/images/beauty.png',
-    },
-    {
-      title: 'Handbags',
-      description: 'Authentic, designer, trend',
-      image: '/images/handbags.png',
+      image: '/beauty.jpg',
     },
   ];
 
@@ -51,10 +47,13 @@ const CategoryBox = () => {
             <h2 className="text-xl font-semibold mt-1">{cat.title}</h2>
             <p className="text-sm text-blue-600 font-medium mt-2">See more →</p>
           </div>
-          <img
+          <Image
             src={cat.image}
             alt={cat.title}
+            width={300}       // Sesuaikan ukuran yang kamu mau
+            height={130}
             className="w-full h-32 object-contain mt-4"
+            priority={true}    // Opsional, supaya gambar langsung load
           />
         </div>
       ))}
