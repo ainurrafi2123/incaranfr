@@ -11,8 +11,7 @@ const Page = () => {
   return (
     <div>
       <Navbar />
-      <div className="pt-16">
-
+      <div className="pt-16"> 
           <Banner />
           <CategoryBox />
           {/* <CategoryBannerGrid />
