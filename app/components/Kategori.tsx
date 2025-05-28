@@ -23,7 +23,7 @@ const categories = [
 
 const Kategori = () => {
   return (
-    <div className="flex flex-wrap gap-6 items-center justify-center py-4">
+    <div className="flex flex-wrap gap-6 items-center justify-center py-6">
       {categories.map((cat, index) => (
         <div key={index} className="flex flex-col items-center text-sm text-gray-800 hover:text-black transition">
           <div className="mb-1">{cat.icon}</div>

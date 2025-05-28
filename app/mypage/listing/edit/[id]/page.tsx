@@ -28,7 +28,7 @@ export default function EditProductPage() {
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Edit Produk</h1>
       <ProductForm
         product={product ?? undefined}
-        onSubmitSuccess={() => router.push("/listing")}
+        onSubmitSuccess={() => router.push("/mypage/listing")}
       />
     </div>
   );

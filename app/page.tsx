@@ -12,12 +12,12 @@ const Page = () => {
     <div>
       <Navbar />
       <div className="pt-16">
-        <Kategori />
-        <Banner />
-        <CategoryBox />
-        <CategoryBannerGrid />
-        <TopBrandsCarousel />
-        <Card />
+
+          <Banner />
+          <CategoryBox />
+          {/* <CategoryBannerGrid />
+        <TopBrandsCarousel /> */}
+          <Card />
         <Footer />
       </div>
     </div>

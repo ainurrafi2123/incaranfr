@@ -9,6 +9,9 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import axios from "axios"; // Import axios from Auth.ts
+import { toast } from "react-toastify";
 
 const ProductDetail = ({ productId = 7 }) => {
   const [product, setProduct] = useState<{
@@ -53,12 +56,15 @@ const ProductDetail = ({ productId = 7 }) => {
     description: string;
     created_at: string;
     updated_at: string;
-  } | null>(null); // State baru untuk kategori dari API terpisah
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [quantity, setQuantity] = useState(1); // New state for quantity
+  const [isOrdering, setIsOrdering] = useState(false); // New state for order processing
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProductDetail = async () => {
@@ -89,7 +95,6 @@ const ProductDetail = ({ productId = 7 }) => {
             `http://localhost:8000/api/category-products/${product.category.id}`
           );
           const data = await response.json();
-          // Asumsi API mengembalikan data kategori dalam format { data: { id, user_id, name, description, created_at, updated_at } }
           if (data.data) {
             setCategory(data.data);
           }
@@ -140,6 +145,74 @@ const ProductDetail = ({ productId = 7 }) => {
 
   const toggleDescription = () => {
     setShowDescription(!showDescription);
+  };
+
+  // New function to handle "Beli Sekarang"
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    if (quantity < 1 || quantity > product.stock_quantity) {
+      toast.error(
+        `barang terjual habis `,
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
+      return;
+    }
+
+    try {
+      setIsOrdering(true);
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          toast.error("Silakan login untuk membuat pesanan.", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          router.push("/login");
+          return;
+        }
+
+        const response = await axios.post(
+          "http://localhost:8000/api/orders",
+          {
+            items: [
+              {
+                product_id: product.id,
+                quantity: quantity,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        toast.success("Pesanan berhasil dibuat!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+
+        // Optionally redirect to an order confirmation page
+        router.push(`/mypage/profile`);
+      }
+    } catch (error: any) {
+      console.error("Error creating order:", error);
+      toast.error(
+        error.response?.data?.message || "Gagal membuat pesanan.",
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   if (loading) {
@@ -300,6 +373,43 @@ const ProductDetail = ({ productId = 7 }) => {
               </div>
             </div>
 
+            {/* Quantity Selector */}
+            <div className="space-y-2">
+              <label className="text-gray-600 text-base">Kuantitas</label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  className="px-3 py-2 bg-gray-200 rounded-lg text-gray-800"
+                  disabled={quantity <= 1}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value >= 1 && value <= product.stock_quantity) {
+                      setQuantity(value);
+                    }
+                  }}
+                  className="w-20 text-center border border-gray-300 rounded-lg py-2"
+                  min="1"
+                  max={product.stock_quantity}
+                />
+                <button
+                  onClick={() => setQuantity((prev) => Math.min(product.stock_quantity, prev + 1))}
+                  className="px-3 py-2 bg-gray-200 rounded-lg text-gray-800"
+                  disabled={quantity >= product.stock_quantity}
+                >
+                  +
+                </button>
+              </div>
+              <p className="text-sm text-gray-500">
+                Stok tersedia: {product.stock_quantity}
+              </p>
+            </div>
+
             {/* Tombol Aksi */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -310,8 +420,12 @@ const ProductDetail = ({ productId = 7 }) => {
                   Tambah ke Keranjang
                 </button>
               </div>
-              <button className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-lg">
-                Beli Sekarang
+              <button
+                onClick={handleBuyNow}
+                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={isOrdering || product.stock_quantity === 0}
+              >
+                {isOrdering ? "Memproses..." : "Beli Sekarang"}
               </button>
               <button className="w-full py-4 px-6 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-lg">
                 <span>PayPal</span>
