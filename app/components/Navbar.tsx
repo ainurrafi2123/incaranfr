@@ -22,7 +22,8 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({ user, pathname }) => {
       : "/mypage/listing/create"
     : "/login";
 
-  const isWhiteNavbar = pathname === "/mypage" || pathname.startsWith("/search");
+  const isWhiteNavbar =
+    pathname === "/mypage" || pathname.startsWith("/search");
 
   return (
     <Link href={destination}>
@@ -38,7 +39,9 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({ user, pathname }) => {
 };
 
 export default function Navbar() {
-  const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; avatar: string } | null>(
+    null
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
 
@@ -72,7 +75,7 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    setIsClient(true);  // Tandai sudah client
+    setIsClient(true); // Tandai sudah client
     checkLoginStatus();
 
     window.addEventListener("storage", checkLoginStatus);
@@ -249,17 +252,18 @@ export default function Navbar() {
                   }`}
                 />
               </button>
-              <Link to="/cart">
-      <button className="relative flex items-center justify-center h-10 w-10">
-        <ShoppingCart
-          className={`w-5 h-5 ${
-            location.pathname === "/mypage" || location.pathname.startsWith("/search")
-              ? "text-gray-900"
-              : "text-white"
-          }`}
-        />
-      </button>
-    </Link>
+              <Link href="/cart">
+                <button className="relative flex items-center justify-center h-10 w-10">
+                  <ShoppingCart
+                    className={`w-5 h-5 ${
+                      location.pathname === "/mypage" ||
+                      location.pathname.startsWith("/search")
+                        ? "text-gray-900"
+                        : "text-white"
+                    }`}
+                  />
+                </button>
+              </Link>
 
               {user && (
                 <div className="relative flex items-center justify-center h-10 w-10 mypage-dropdown">
@@ -290,7 +294,7 @@ export default function Navbar() {
                         href="/mypage/profile"
                         className="block px-4 py-2 hover:bg-gray-200 text-sm text-gray-700"
                       >
-                        Profile
+                        Daftar Pesanan
                       </Link>
                       <button
                         onClick={handleLogout}
